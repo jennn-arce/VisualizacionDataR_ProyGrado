@@ -196,3 +196,6 @@ u3 <- fluidPage(
 )
 
 shinyApp(ui=u3, server= server_3)
+
+## Buscar refinamientos de las figuras en ggplots, solo hacer cosas estetécias
+## Corregir los comentarios
