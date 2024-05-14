@@ -104,7 +104,7 @@ server <- function(input, output) {   # Define la lógica del servidor
 }
 
 # Crea la aplicación Shiny
-shinyApp(ui = ui, server = server)   # Crea una aplicación Shiny con la interfaz de usuario y la función del servidor definidas anteriormente
+#shinyApp(ui = ui, server = server)   # Crea una aplicación Shiny con la interfaz de usuario y la función del servidor definidas anteriormente
 
 
 # Gráfica scatter: publicidad vs ventas
@@ -125,7 +125,7 @@ ui1 <- fluidPage(
   mainPanel(
     plotOutput("scatterplot")
   )
-)
+))
 
 # Función del servidor
 server_2 <- function(input, output) { # nolint
@@ -142,4 +142,57 @@ server_2 <- function(input, output) { # nolint
 }
 
 # Crea la aplicación Shiny
-shinyApp(ui = ui1, server = server_2)
+#shinyApp(ui = ui1, server = server_2)
+
+
+## Juntar todo:
+server_3 <- function(input, output){
+  output$scatterplot <- renderPlot({
+    # Filtrar los datos por el año seleccionado
+    filtered_data <- subset(data, y == input$year)
+    
+    # Crear el scatter plot
+    ggplot(filtered_data, aes(x = log(publicidad), y = log(ventas))) +
+      geom_point() +
+      labs(x = "Log(Publicidad)", y = "Log(Ventas)") +
+      ggtitle(paste("Scatter Log(Publicidad) vs. Log(Ventas) para el Año", input$year))
+  })
+    output$plot <- renderPlot({   # Crea un gráfico de acuerdo a los parámetros dados
+    ggplot(data, aes_string(x = "y", y = input$variable)) +   # Crea un gráfico con ggplot2
+      geom_bar(stat = "summary", fun = sum, fill = "blue") +   # Agrega barras al gráfico
+      labs(x = "Año", y = "Total", fill = "Variable") +   # Etiqueta los ejes x e y y la leyenda de colores
+      ggtitle(paste("Total de", input$variable, "por año")) +   # Agrega un título al gráfico
+      theme_minimal()   # Aplica un tema minimalista al gráfico
+  })
+}
+
+
+u3 <- fluidPage(
+  ## PLOT DE SCATTER
+  titlePanel("Scatter Plot de Log(Publicidad) vs. Log(Ventas)"),
+  sidebarLayout(
+    sidebarPanel(
+      # Selector de año
+      selectInput("year", "Selecciona un año:",
+                  choices = unique(data$y))
+    ),
+    mainPanel(
+      plotOutput("scatterplot")
+    )
+  ),
+  
+  ## PLOT DE VENTAS O PUBLICIDAD POR AÑO
+  titlePanel("Total de ventas o publicidad por año"),   # Título de la página
+  
+  sidebarLayout(   # Define un diseño con un panel lateral y un panel principal
+    sidebarPanel(   # Define el panel lateral
+      selectInput("variable", "Seleccione una variable:",   # Crea un menú desplegable llamado "variable"
+                  choices = c("ventas", "publicidad", "kw"))   # Opciones del menú desplegable
+    ),
+    mainPanel(   # Define el panel principal
+      plotOutput("plot")   # Crea un espacio para mostrar el gráfico generado
+    )
+  )
+)
+
+shinyApp(ui=u3, server= server_3)
